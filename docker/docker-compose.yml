@@ -1,0 +1,51 @@
+# keepwatch — go2rtc + detector stack.
+# Run from the repository root:
+#   docker compose -f docker/docker-compose.yml up --build
+#
+# Before first run:
+#   cp .env.example .env
+#   cp detector.yaml.example detector.yaml
+#   cp go2rtc.yaml.example go2rtc.yaml
+#   # then edit those three files for your setup
+
+services:
+  go2rtc:
+    image: alexxit/go2rtc:latest
+    container_name: keepwatch-go2rtc
+    restart: unless-stopped
+    network_mode: host
+    env_file:
+      - ../.env
+    volumes:
+      - ../go2rtc.yaml:/config/go2rtc.yaml:ro
+      - ../dashboard:/config/dashboard:ro
+    # go2rtc reads /config/go2rtc.yaml by default.
+
+  detector:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: keepwatch-detector:latest
+    container_name: keepwatch-detector
+    restart: unless-stopped
+    depends_on:
+      - go2rtc
+    network_mode: host
+    env_file:
+      - ../.env
+    environment:
+      FFMPEG_PATH: /usr/bin/ffmpeg
+    volumes:
+      - ../detector.yaml:/app/detector.yaml:ro
+      - ../data:/app/data
+      - ../logs:/app/logs
+      - ../media:/app/media
+
+# Why `network_mode: host`?
+#
+# RTSP cameras live on your LAN. go2rtc also opens UDP ports for WebRTC.
+# Running both services on the host network avoids brittle UDP NAT and
+# lets the detector consume go2rtc's loopback RTSP restream at 127.0.0.1:8554.
+# If your environment requires bridge mode, you'll need to expose 1984/tcp,
+# 8554/tcp, 8555/udp, and 8000/tcp explicitly, and update detector.yaml's
+# RTSP URLs to use the go2rtc service name instead of 127.0.0.1.

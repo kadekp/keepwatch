@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Home CCTV dashboard for live monitoring, health checks, and recorded incident review.">
+    <meta name="color-scheme" content="dark">
+    <link rel="icon" href="data:,">
+    <title>Surveillance Console</title>
+    <link rel="stylesheet" href="style.css?v=20260405-monitor">
+</head>
+<body>
+    <div class="page-backdrop" aria-hidden="true"></div>
+
+    <header class="topbar">
+        <div class="brand-block">
+            <p class="eyebrow">Home Station</p>
+            <h1>Surveillance Console</h1>
+            <p class="subhead">Live watch, alert health, and incident playback for every camera.</p>
+        </div>
+
+        <div class="topbar-links">
+            <button class="refresh-button" id="refresh-dashboard" type="button">Refresh Now</button>
+            <a class="utility-link" id="go2rtc-link" href="/" target="_blank" rel="noopener">Open Live Server</a>
+        </div>
+    </header>
+
+    <main class="console-layout">
+        <section class="status-banner" aria-label="System status">
+            <div class="status-banner-main">
+                <p class="card-kicker">System Status</p>
+                <h2 id="global-status">Syncing live system…</h2>
+                <p class="card-support" id="global-status-caption">Waiting for detector and live health data.</p>
+            </div>
+
+            <div class="status-banner-side">
+                <div class="status-banner-chip">
+                    <span class="status-banner-label">Last Sync</span>
+                    <span class="status-banner-value" id="last-sync-status">Waiting for the first refresh</span>
+                </div>
+                <div class="status-banner-chip">
+                    <span class="status-banner-label">Server</span>
+                    <span class="status-banner-value" id="go2rtc-host-label">-</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="overview-strip" aria-label="System overview">
+            <article class="overview-card emphasis-card">
+                <p class="card-kicker">Coverage</p>
+                <h2 id="coverage-title">Loading live status…</h2>
+                <div class="metric-row">
+                    <div>
+                        <span class="metric-value" id="live-online-count">—</span>
+                        <span class="metric-label">feeds online</span>
+                    </div>
+                    <div>
+                        <span class="metric-value" id="recorder-online-count">—</span>
+                        <span class="metric-label">recorders ready</span>
+                    </div>
+                </div>
+            </article>
+
+            <article class="overview-card">
+                <p class="card-kicker">Storage</p>
+                <h2 id="storage-usage">Loading storage…</h2>
+                <div class="storage-meter" aria-hidden="true">
+                    <div class="storage-meter-fill" id="storage-meter-fill"></div>
+                </div>
+                <p class="card-support" id="storage-caption">Waiting for storage data.</p>
+            </article>
+
+            <article class="overview-card">
+                <p class="card-kicker">Recent Feed</p>
+                <h2 id="events-summary-total">0 loaded events</h2>
+                <div class="metric-row compact">
+                    <div>
+                        <span class="metric-value" id="events-person-count">0</span>
+                        <span class="metric-label">person events</span>
+                    </div>
+                    <div>
+                        <span class="metric-value" id="events-motion-count">0</span>
+                        <span class="metric-label">motion-only</span>
+                    </div>
+                </div>
+                <p class="card-support" id="events-summary-latest">No recent activity yet.</p>
+            </article>
+
+            <article class="overview-card">
+                <p class="card-kicker">Alerts</p>
+                <h2 id="alert-title">Checking active motion…</h2>
+                <p class="card-support" id="alert-caption">Waiting for health data.</p>
+            </article>
+        </section>
+
+        <section class="panel live-panel" aria-labelledby="live-heading">
+            <div class="panel-head">
+                <div>
+                    <p class="panel-kicker">Live Monitor</p>
+                    <h2 id="live-heading">Camera Grid</h2>
+                </div>
+                <p class="panel-support">Live footage stays primary. Health and alert signals stay compact but visible.</p>
+            </div>
+
+            <div class="camera-grid" id="cameras-grid">
+                <p class="camera-grid-empty" id="cameras-grid-empty">Loading cameras from /api/cameras…</p>
+            </div>
+
+            <template id="camera-card-template">
+                <article class="camera-card">
+                    <div class="camera-card-head">
+                        <div>
+                            <p class="camera-label" data-role="kicker">Live feed</p>
+                            <h3 data-role="display-name"></h3>
+                        </div>
+                        <span class="camera-pill" data-role="pill">Idle</span>
+                    </div>
+
+                    <div class="video-shell" data-role="video-shell">
+                        <div class="video-container" data-role="video-container">
+                            <video autoplay playsinline muted data-role="video"></video>
+                            <div class="video-overlay" data-role="overlay">Connecting to live feed…</div>
+                        </div>
+                    </div>
+
+                    <div class="camera-health-row">
+                        <div class="camera-health-chip">
+                            <span class="camera-health-name">Live</span>
+                            <span class="camera-health-value" data-role="live-state">Waiting</span>
+                        </div>
+                        <div class="camera-health-chip">
+                            <span class="camera-health-name">Stream</span>
+                            <span class="camera-health-value" data-role="stream-state">Unknown</span>
+                        </div>
+                        <div class="camera-health-chip">
+                            <span class="camera-health-name">Recorder</span>
+                            <span class="camera-health-value" data-role="recorder-state">Unknown</span>
+                        </div>
+                        <div class="camera-health-chip alert-chip">
+                            <span class="camera-health-name">Alert</span>
+                            <span class="camera-health-value" data-role="alert-state">Standby</span>
+                        </div>
+                    </div>
+
+                    <p class="camera-support" data-role="support"></p>
+
+                    <div class="camera-controls">
+                        <button type="button" data-action="reconnect">Reconnect</button>
+                        <button type="button" data-action="fullscreen">Fullscreen</button>
+                        <button type="button" data-action="snapshot">Snapshot</button>
+                    </div>
+                </article>
+            </template>
+        </section>
+
+        <section class="panel incident-panel" aria-labelledby="incident-heading">
+            <div class="panel-head incident-head">
+                <div>
+                    <p class="panel-kicker">Incident Review</p>
+                    <h2 id="incident-heading">Event Queue & Playback</h2>
+                    <p class="panel-support" id="events-meta">Loading recent activity…</p>
+                </div>
+            </div>
+
+            <div class="incident-layout">
+                <div class="queue-column">
+                    <div class="filter-row" id="filter-row" aria-label="Event filters">
+                        <button class="filter-button active" data-filter="all" type="button" aria-pressed="true">All</button>
+                        <button class="filter-button" data-filter="person" type="button" aria-pressed="false">Person</button>
+                        <button class="filter-button" data-filter="motion" type="button" aria-pressed="false">Motion Only</button>
+                    </div>
+
+                    <div class="events-list" id="events-list" aria-live="polite"></div>
+                    <div class="events-empty" id="events-empty" hidden>No recent events yet.</div>
+                </div>
+
+                <div class="detail-column">
+                    <div class="detail-empty" id="detail-empty">Select an event to review its clip, metadata, and response actions.</div>
+
+                    <article class="detail-card" id="event-detail" hidden>
+                        <div class="detail-head">
+                            <div>
+                                <p class="detail-kicker" id="detail-camera">Camera</p>
+                                <h3 id="detail-title">Event detail</h3>
+                            </div>
+                            <span class="event-badge motion" id="detail-badge">Motion</span>
+                        </div>
+
+                        <div class="detail-video-shell" id="detail-video-shell">
+                            <video class="detail-video" id="detail-video" controls preload="metadata" playsinline></video>
+                        </div>
+
+                        <div class="detail-playback-status" id="detail-playback-status" hidden>
+                            <span id="detail-playback-message">Playback unavailable.</span>
+                            <button type="button" id="detail-retry-playback">Retry Playback</button>
+                        </div>
+
+                        <div class="detail-meta-grid">
+                            <div class="detail-metric">
+                                <span class="detail-metric-label">Started</span>
+                                <span class="detail-metric-value" id="detail-started-at">-</span>
+                            </div>
+                            <div class="detail-metric">
+                                <span class="detail-metric-label">Duration</span>
+                                <span class="detail-metric-value" id="detail-duration">-</span>
+                            </div>
+                            <div class="detail-metric">
+                                <span class="detail-metric-label">Confidence</span>
+                                <span class="detail-metric-value" id="detail-confidence">-</span>
+                            </div>
+                            <div class="detail-metric">
+                                <span class="detail-metric-label">Clip Size</span>
+                                <span class="detail-metric-value" id="detail-size">-</span>
+                            </div>
+                        </div>
+
+                        <p class="detail-note" id="detail-note">Waiting for selection.</p>
+
+                        <div class="detail-actions">
+                            <a class="action-link primary" id="detail-open-link" href="#" target="_blank" rel="noopener">Open Clip</a>
+                            <a class="action-link" id="detail-download-link" href="#" download>Download Clip</a>
+                        </div>
+                    </article>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="vendor/hls.min.js"></script>
+    <script src="app.js?v=20260405-player"></script>
+    <script>
+        const go2rtcLink = document.getElementById('go2rtc-link');
+        const hostLabel = document.getElementById('go2rtc-host-label');
+        go2rtcLink.href = window.location.origin;
+        go2rtcLink.textContent = window.location.host;
+        hostLabel.textContent = window.location.host;
+    </script>
+</body>
+</html>

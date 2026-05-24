@@ -1,0 +1,18 @@
+[Unit]
+Description=keepwatch — go2rtc live view + dashboard
+# Install location is %h/keepwatch (the user's home + project name).
+# go2rtc binary must exist at %h/keepwatch/go2rtc — download from
+# https://github.com/AlexxIT/go2rtc/releases for your host architecture.
+
+[Service]
+Type=simple
+WorkingDirectory=%h/keepwatch
+# Loads ${VAR} secrets (camera URLs, dashboard credentials) into the
+# go2rtc process. The .env file should be chmod 600.
+EnvironmentFile=%h/keepwatch/.env
+ExecStart=%h/keepwatch/go2rtc -c %h/keepwatch/go2rtc.yaml
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=default.target

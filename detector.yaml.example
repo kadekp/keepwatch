@@ -1,0 +1,93 @@
+# keepwatch — example detector configuration.
+# Copy this file to detector.yaml and edit for your setup.
+
+log_level: INFO
+
+model:
+  # YOLOv8n is the default. The ultralytics library will download it on
+  # first run if the file doesn't exist next to run_detector.py.
+  model_path: yolov8n.pt
+  # Set to true on Apple Silicon to use the MPS backend (faster on M-series).
+  use_mps: false
+
+recording:
+  # Path to the ffmpeg binary. Use /usr/bin/ffmpeg for the system build on
+  # Linux (with VA-API support); plain "ffmpeg" works if it's on PATH.
+  ffmpeg_path: ffmpeg
+  # Each recorded segment is this many seconds long; clips are assembled
+  # from a rolling window of segments.
+  segment_seconds: 5
+  # How many seconds of footage to include before motion was detected.
+  pre_roll_seconds: 10
+  # How many seconds after the last motion to keep recording.
+  post_roll_seconds: 20
+  # How long to retain rolling segments on disk before discarding them.
+  segment_buffer_seconds: 90
+  # Video encoder used when a crop is configured (which forces re-encoding).
+  # Options: software (libx264, default — works everywhere)
+  #          vaapi    (Intel/AMD VA-API; requires /dev/dri/renderD128)
+  #          nvenc    (NVIDIA; requires the nvenc-capable ffmpeg + GPU)
+  #          videotoolbox (Apple; requires macOS ffmpeg)
+  encoder: software
+  # Render device used only when encoder: vaapi.
+  vaapi_device: /dev/dri/renderD128
+
+storage:
+  # All paths are resolved relative to this file.
+  db_path: data/detections.db
+  logs_dir: logs
+  media_root: media
+  # JPEG quality for saved thumbnails / snapshots (0–100).
+  jpeg_quality: 85
+  # Hard cap: keepwatch deletes oldest events when usage exceeds this.
+  max_bytes: 53687091200      # 50 GB
+  # After cleanup, stop deleting when usage drops below this.
+  low_water_bytes: 48318382080  # 45 GB
+
+api:
+  # Bind the detector REST API. Use 127.0.0.1 to keep it local.
+  host: 127.0.0.1
+  port: 8000
+  # Origin regex for CORS. The default matches the go2rtc dashboard origin.
+  cors_origin_regex: "^https?://[^/]+:1984$"
+
+cameras:
+  # Add one entry per camera. The `name` is a short identifier used in URLs
+  # and on disk; the `display_name` shows up in the dashboard.
+  - name: front
+    display_name: Front Door
+    # Detector and recorder both consume the local go2rtc loopback restream
+    # — see go2rtc.yaml.example for how to wire that up.
+    detect_rtsp_url: rtsp://127.0.0.1:8554/front?video=h264
+    record_rtsp_url: rtsp://127.0.0.1:8554/front?video=h264
+    capture_fps: 2.0           # How often the detector pulls a frame.
+    inference_fps: 1.0         # How often YOLOv8 runs on that frame.
+    frame_width: 480           # Detector-internal resize (kept square = fast).
+    frame_height: 480
+    motion_threshold: 25       # MOG2 variance threshold.
+    motion_min_area: 5000      # Ignore motion blobs smaller than this (px²).
+    motion_blur_size: 21       # Gaussian blur kernel before motion detection.
+    confidence_threshold: 0.5  # YOLO confidence floor.
+    cooldown_seconds: 2.0      # Min seconds between two person detections.
+
+  - name: back
+    display_name: Back Yard
+    detect_rtsp_url: rtsp://127.0.0.1:8554/back?video=h264
+    record_rtsp_url: rtsp://127.0.0.1:8554/back?video=h264
+    capture_fps: 2.0
+    inference_fps: 1.0
+    frame_width: 480
+    frame_height: 480
+    motion_threshold: 25
+    motion_min_area: 5000
+    motion_blur_size: 21
+    confidence_threshold: 0.5
+    cooldown_seconds: 2.0
+    # Optional per-camera crop. Coordinates are fractions of the source frame
+    # (0.0–1.0). Useful for excluding noisy regions like a busy road or a
+    # window in the frame. Omit `crop:` entirely for full-frame detection.
+    crop:
+      x: 0.0
+      y: 0.5
+      width: 1.0
+      height: 0.5

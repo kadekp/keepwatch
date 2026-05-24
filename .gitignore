@@ -1,0 +1,41 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+build/
+dist/
+
+# Project secrets — never commit
+.env
+
+# Project runtime data
+data/
+logs/
+media/
+detections/
+
+# Model weights (auto-downloaded by ultralytics)
+*.pt
+
+# go2rtc binary (download per architecture)
+/go2rtc
+
+# Active config (always derive from *.example)
+/detector.yaml
+/go2rtc.yaml
+
+# macOS / IDE / editor noise
+.DS_Store
+.vscode/
+.idea/
+*.swp
+*.swo
+.claude/
+
+# In-place edit backups
+*.bak
+*.bak.*

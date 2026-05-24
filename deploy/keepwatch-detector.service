@@ -1,0 +1,19 @@
+[Unit]
+Description=keepwatch — detection + recording + event API
+After=keepwatch-go2rtc.service
+Requires=keepwatch-go2rtc.service
+
+[Service]
+Type=simple
+WorkingDirectory=%h/keepwatch
+Environment=PATH=%h/keepwatch/.venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+# Pin the ffmpeg binary used for recording. /usr/bin/ffmpeg is the system
+# build on Debian/Ubuntu and supports VA-API; the static builds typically
+# don't. Override with recording.ffmpeg_path in detector.yaml if you need to.
+Environment=FFMPEG_PATH=/usr/bin/ffmpeg
+ExecStart=%h/keepwatch/.venv/bin/python %h/keepwatch/run_detector.py --config %h/keepwatch/detector.yaml
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=default.target

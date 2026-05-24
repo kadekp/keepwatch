@@ -1,0 +1,39 @@
+# keepwatch — example go2rtc configuration.
+# Copy this file to go2rtc.yaml and edit for your cameras.
+# Secrets are pulled from .env (${VAR} substitution) — never inline them here.
+
+streams:
+  # Each top-level key here is a stream name. It must match the camera
+  # `name` in detector.yaml. Multiple sources per stream are tried in order;
+  # the second entry is a re-encoded copy for browser compatibility, only
+  # produced on demand.
+  front:
+    - "${CAM_FRONT_RTSP}"
+    - "ffmpeg:front#video=h264"
+  back:
+    - "${CAM_BACK_RTSP}"
+    - "ffmpeg:back#video=h264"
+
+ffmpeg:
+  # Path to the ffmpeg binary go2rtc uses for on-demand transcoding.
+  bin: /usr/bin/ffmpeg
+  # Default transcode profile. The example below uses software encoding so
+  # it works on any host. If you have Intel/AMD VA-API, swap for the
+  # hardware-accelerated variant documented in docs/encoders.md.
+  h264: "-vf scale='min(1280,iw)':'min(1280,ih)':force_original_aspect_ratio=decrease:force_divisible_by=2 -c:v libx264 -profile:v baseline -level:v 3.1 -preset:v superfast -tune:v zerolatency -pix_fmt:v yuv420p"
+
+api:
+  # The dashboard and WebRTC signaling. ${LISTEN_HOST} comes from .env.
+  listen: "${LISTEN_HOST}:1984"
+  static_dir: "dashboard"
+  username: "${GO2RTC_API_USER}"
+  password: "${GO2RTC_API_PASSWORD}"
+
+rtsp:
+  # The detector reads its inputs from this loopback restream.
+  listen: "127.0.0.1:8554"
+
+webrtc:
+  listen: "${LISTEN_HOST}:8555"
+  candidates:
+    - "${LISTEN_HOST}:8555"
