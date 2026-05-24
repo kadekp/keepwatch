@@ -23,22 +23,6 @@ A small, readable, self-hosted CCTV recorder for the home lab. **One config file
 - Manages its own disk: hard cap + low-water mark, oldest events deleted first.
 - One Python process, one go2rtc process, one config file. That's the whole runtime.
 
-## What it isn't
-
-**keepwatch is intentionally small.** If you need any of the following, use [Frigate](https://frigate.video/) — it's excellent and these are all out of scope here:
-
-- MQTT events / Home Assistant integration / Node-RED hooks
-- Multi-class object detection (cars, packages, animals)
-- Coral TPU pipelines
-- Two-way audio
-- Cloud sync, off-host storage, replication
-- Multi-tenant / multi-operator
-- A built-in NVR interface for ten cameras and PTZ control
-
-What you get instead: ~1,600 lines of Python you can actually read in an afternoon.
-
----
-
 ## Quick start (Docker)
 
 You need a working RTSP URL from at least one camera before this is interesting. See [`docs/cameras.md`](docs/cameras.md) for tips on getting one out of common brands.
@@ -143,7 +127,7 @@ The aim is to stay small. Things on the list:
 
 Things explicitly **not** on the list:
 
-- HomeAssistant integration, MQTT, message brokers
+- Integrations with external automation platforms or message brokers
 - Web-based config editor
 - Multi-operator / multi-tenant
 - Cloud sync

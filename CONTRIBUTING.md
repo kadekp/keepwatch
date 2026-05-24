@@ -15,7 +15,7 @@ In scope:
 - Documentation improvements
 
 Out of scope (these will likely be declined):
-- MQTT / Home Assistant / Node-RED integration
+- Integrations that introduce a new external service dependency
 - Cloud sync, replication, off-host storage
 - Multi-class detection beyond person (PR welcome only as a toggle, not a default)
 - A web-based config editor
